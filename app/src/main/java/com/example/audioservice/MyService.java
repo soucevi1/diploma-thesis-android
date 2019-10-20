@@ -10,6 +10,7 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import androidx.core.content.ContextCompat;
@@ -29,10 +31,10 @@ public class MyService extends Service {
 
     AudioRecord recorder;
 
-    private int sampleRate = 8000;//16000 ; // 44100 for music
-    private int channelConfig = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+    private int sampleRate = 44100;//8000;//16000 ; // 44100 for music
+    private int channelConfig = AudioFormat.CHANNEL_IN_MONO;//AudioFormat.CHANNEL_CONFIGURATION_MONO;
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-    private int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+    private int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat) * 10;
     private boolean status = true;
 
     public MyService() {
@@ -69,33 +71,43 @@ public class MyService extends Service {
                     final InetAddress destination = InetAddress.getByName(address);
                     Log.d(TAG, "Address retrieved");
 
-
-                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize * 10);
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize); //* 10);
                     Log.d(TAG, "Recorder initialized");
 
-                    recorder.startRecording();
+                    if(recorder.getState() != AudioRecord.STATE_INITIALIZED){
+                        throw new ExceptionInInitializerError();
+                    }
 
+                    recorder.startRecording();
 
                     while (status == true) {
 
                         //reading data from MIC into buffer
-                        minBufSize = recorder.read(buffer, 0, buffer.length);
+                        int read = recorder.read(buffer, 0, buffer.length);
+
+                        Log.i(TAG, "Read bytes: " + read);
 
                         //putting buffer in the packet
-                        packet = new DatagramPacket(buffer, buffer.length, destination, port);
+                        packet = new DatagramPacket(buffer, read, destination, port);
 
                         //Log.e(TAG, "Preparing to send packet");
                         socket.send(packet);
-                        //Log.e(TAG, "Packet sent");
 
+                        // Clear the buffer
+                        Arrays.fill(buffer, (byte)0);
                     }
                     Log.e(TAG, "Status is false");
-
                 } catch (UnknownHostException e) {
                     Log.e(TAG, "UnknownHostException");
                 } catch (IOException e) {
                     e.printStackTrace();
                     Log.e(TAG, "IOException");
+                } catch (IllegalArgumentException e){
+                    e.printStackTrace();
+                    Log.e(TAG, "Illegal argument exception!!!");
+                } catch (ExceptionInInitializerError e){
+                    e.printStackTrace();
+                    Log.e(TAG, "Recorder not initialised properly");
                 }
             }
         });
@@ -106,10 +118,19 @@ public class MyService extends Service {
         return START_STICKY;
     }
 
+    @Override
     public void onDestroy(){
         status = false;
         recorder.release();
         Log.d(TAG,"Recorder released");
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent){
+        status = false;
+        recorder.stop();
+        recorder.release();
+        Log.d(TAG,"Recorder released (task removed)");
     }
 
     public void waitForPermissions() {
