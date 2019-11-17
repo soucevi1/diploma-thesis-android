@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.media.audiofx.AcousticEchoCanceler;
+import android.media.audiofx.NoiseSuppressor;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -35,7 +37,7 @@ public class MyService extends Service {
     private int channelConfig = AudioFormat.CHANNEL_IN_MONO;//AudioFormat.CHANNEL_CONFIGURATION_MONO;
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
     private int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat) * 10;
-    private boolean status = true;
+    private volatile boolean status = true;
 
     public MyService() {
     }
@@ -56,6 +58,7 @@ public class MyService extends Service {
             @Override
             public void run() {
 
+                //waitForPermissions();
                 waitForPermissions();
 
                 try {
@@ -72,10 +75,27 @@ public class MyService extends Service {
                     Log.d(TAG, "Address retrieved");
 
                     recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize); //* 10);
+
+                    while(recorder.getState() != AudioRecord.STATE_INITIALIZED){
+                        Log.i(TAG, "Waiting for recorder initialization");
+                        recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize); //* 10);
+                        try {
+                            TimeUnit.SECONDS.sleep(2);
+                        } catch(InterruptedException e){
+                            e.printStackTrace();
+                        }
+                    }
+
                     Log.d(TAG, "Recorder initialized");
 
-                    if(recorder.getState() != AudioRecord.STATE_INITIALIZED){
-                        throw new ExceptionInInitializerError();
+                    if (AcousticEchoCanceler.isAvailable()){
+                        AcousticEchoCanceler.create(recorder.getAudioSessionId());
+                        Log.i(TAG, "Creating acoustic echo canceller");
+                    }
+
+                    if(NoiseSuppressor.isAvailable()){
+                        NoiseSuppressor.create(recorder.getAudioSessionId());
+                        Log.i(TAG, "Creating noise suppressor");
                     }
 
                     recorder.startRecording();
@@ -127,19 +147,31 @@ public class MyService extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent){
+        Log.d(TAG,"Task removed");
         status = false;
         recorder.stop();
         recorder.release();
-        Log.d(TAG,"Recorder released (task removed)");
     }
+
+    /*
+    public void waitForPermissions() {
+
+        Log.e(TAG, "Waiting for permission to record audio...");
+        while (ContextCompat.checkSelfPermission(MyService.this,
+                Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+        }
+        Log.e(TAG, "Permission granted");
+    }*/
 
     public void waitForPermissions() {
         /*
         Wait until the user has granted us the permission to Record Audio.
+        NO CONTEXT COMPAT version
          */
+
         Log.e(TAG, "Waiting for permission to record audio...");
-        while (ContextCompat.checkSelfPermission(MyService.this,
-                Manifest.permission.RECORD_AUDIO)
+        while (this.checkCallingOrSelfPermission(Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
         }
         Log.e(TAG, "Permission granted");
