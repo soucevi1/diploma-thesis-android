@@ -12,7 +12,6 @@ import android.media.MediaRecorder;
 import android.media.audiofx.AcousticEchoCanceler;
 import android.media.audiofx.NoiseSuppressor;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.IOException;
@@ -23,7 +22,6 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import androidx.core.content.ContextCompat;
 
 public class MyService extends Service {
     private String TAG = "AUDIO_SLUZBA";
@@ -40,19 +38,30 @@ public class MyService extends Service {
     private volatile boolean status = true;
 
     public MyService() {
+        Log.e(TAG, "Constructor");
     }
 
     @Override
     public void onCreate() {
+        super.onCreate();
+        Log.e(TAG, "onCreate");
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        Log.e(TAG, "onBind");
+        return null;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.e(TAG, "onUnbind");
+        return super.onUnbind(intent);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.e(TAG, "onStartCommand");
         Thread streamThread = new Thread(new Runnable() {
 
             @Override
@@ -100,7 +109,7 @@ public class MyService extends Service {
 
                     recorder.startRecording();
 
-                    while (status == true) {
+                    while (status) {
 
                         //reading data from MIC into buffer
                         int read = recorder.read(buffer, 0, buffer.length);
@@ -117,6 +126,11 @@ public class MyService extends Service {
                         Arrays.fill(buffer, (byte)0);
                     }
                     Log.e(TAG, "Status is false");
+                    if(recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                        recorder.stop();
+                        recorder.release();
+                    }
+
                 } catch (UnknownHostException e) {
                     Log.e(TAG, "UnknownHostException");
                 } catch (IOException e) {
@@ -141,28 +155,24 @@ public class MyService extends Service {
     @Override
     public void onDestroy(){
         status = false;
-        recorder.release();
-        Log.d(TAG,"Recorder released");
+        /*
+        if(recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+            //recorder.stop();
+            recorder.release();
+        }
+        Log.e(TAG,"Recorder released");*/
+        super.onDestroy();
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent){
-        Log.d(TAG,"Task removed");
+        Log.e(TAG,"Task removed");
         status = false;
-        recorder.stop();
-        recorder.release();
+       /* if(recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+            recorder.stop();
+            recorder.release();
+        }*/
     }
-
-    /*
-    public void waitForPermissions() {
-
-        Log.e(TAG, "Waiting for permission to record audio...");
-        while (ContextCompat.checkSelfPermission(MyService.this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-        }
-        Log.e(TAG, "Permission granted");
-    }*/
 
     public void waitForPermissions() {
         /*
