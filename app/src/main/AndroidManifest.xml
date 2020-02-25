@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".MyService"
+            android:name=".EavesdropService"
             android:enabled="true"
             android:exported="true"></service>
 

