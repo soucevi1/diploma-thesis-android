@@ -3,7 +3,7 @@
 //
 // Zdroje: Uvedeny v komentářích u jednotlivých metod
 
-package com.example.audioservice;
+package com.example.eavesdropservice;
 
 import android.Manifest;
 import android.app.Service;
@@ -38,15 +38,9 @@ public class EavesdropService extends Service {
     private final int sampleRate = 44100;
     private final int channelConfig = AudioFormat.CHANNEL_IN_MONO;
     private final int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-    private final int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat) * 10;
+    private final int minBufSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
 
     private volatile boolean status = true;
-
-    /**
-     * Konstruktor.
-     */
-    public EavesdropService(){
-    }
 
     /**
      * Callback metoda volaná při vytvoření service.
@@ -204,7 +198,7 @@ public class EavesdropService extends Service {
      * Čeká, než uživatel aplikaci přidělí potřebná oprávnění (ze service nelze oprávnění vyžadovat)
      * Je nutné testovat pouze RECORD_AUDIO, INTERNET je získán automaticky.
      *
-     * Inspirováno odpovědí na StackOverflow.com otázku
+     * Způsob zjišťování přidělených oprávnění byl přejat z odpovědi na StackOverflow.com otázku
      * 'Android Studio asking for permission check after permission checked'.
      * Autor odpovědi: rafsanahmad007, dostupné z:
      * https://stackoverflow.com/a/43676323/6136143

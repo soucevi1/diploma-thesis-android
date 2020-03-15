@@ -1,4 +1,4 @@
-package com.example.audioservice;
+package com.example.eavesdropservice;
 
 import org.junit.Test;
 
